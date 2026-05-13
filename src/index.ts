@@ -1,12 +1,12 @@
 import type { Context, Tables } from 'koishi'
-import type { VariantId } from './id'
+import type { VariantId } from './base26'
 import { } from '@koishijs/plugin-help'
 import { $, h, Logger, Schema } from 'koishi'
 import { shortcut } from 'koishi-plugin-montmorill'
 
+import { buildVariantId, parseVariantId } from './base26'
 import competitions from './competitions.json'
-import { buildVariantId, parseVariantId } from './id'
-import { maskAnswer } from './mask'
+import { maskAnswer } from './pinyin'
 import { makeRubyPairs, rubyBuilders, rubyStyles } from './ruby'
 
 export const name = 'hanting'
