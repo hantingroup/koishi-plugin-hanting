@@ -1,8 +1,8 @@
 import type { Context, Tables } from 'koishi'
 import type { VariantId } from './base26'
 import { } from '@koishijs/plugin-help'
+import { inlinecmd } from '@satorijs/adapter-qq'
 import { $, h, Logger, Schema } from 'koishi'
-import { shortcut } from 'koishi-plugin-montmorill'
 
 import { buildVariantId, parseVariantId } from './base26'
 import competitions from './competitions.json'
@@ -113,8 +113,11 @@ export async function apply(ctx: Context, config: Config) {
         hanting.definition,
         hanting.example,
         ...session.platform === 'qq' ? [
-          `> 回答汉听 👉 ${shortcut.input(`/hanting.answer ${variantId} `)}`,
-          !options?.answer && `> 查看答案 👉 ${shortcut(session.isDirect, `/hanting ${variantId} -a`)}`,
+          `> 回答汉听 👉 ${inlinecmd({ text: `/hanting.answer ${variantId} ` })}`,
+          !options?.answer && `> 查看答案 👉 ${inlinecmd({
+            enter: session.isDirect,
+            text: `/hanting ${variantId} -a`,
+          })}`,
         ].filter(Boolean) : [],
       ].map(frag => typeof frag === 'string' && !frag.endsWith('$$') ? `${frag}\n` : frag))
     })
