@@ -21,13 +21,13 @@ export interface Config {
 
 export const Config: Schema<Config> = Schema.intersect([
   Schema.object({
-    dataUrl: Schema.string().description('汉听词库 URL').default('https://raw.githubusercontent.com/HanTingQuan/HTDictionary/refs/heads/main/hanting.csv'),
-    rubyStyle: Schema.union(rubyStyles).description('拼音格式').default('plain'),
+    dataUrl: Schema.string().description('汉听词库 URL。').default('https://raw.githubusercontent.com/HanTingQuan/HTDictionary/refs/heads/main/hanting.csv'),
+    rubyStyle: Schema.union(rubyStyles).description('拼音格式。').default('plain'),
   }),
   Schema.object({
-    replaceMap: Schema.dict(Schema.string()).description('替换拼音中的字符').collapse().default({ a: 'ɑ', ā: 'ɑ̄', á: 'ɑ́', ǎ: 'ɑ̌', à: 'ɑ̀', g: 'ɡ' }),
-    competitions: Schema.dict(Schema.string()).description('比赛来源文本').collapse().default(competitions),
-  }).description('高级配置'),
+    replaceMap: Schema.dict(Schema.string()).description('替换拼音中的字符。').collapse().default({ a: 'ɑ', ā: 'ɑ̄', á: 'ɑ́', ǎ: 'ɑ̌', à: 'ɑ̀', g: 'ɡ' }),
+    competitions: Schema.dict(Schema.string()).description('比赛来源文本。').collapse().default(competitions),
+  }).description('高级配置。'),
 ])
 
 export const inject = ['database']
