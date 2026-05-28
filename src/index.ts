@@ -21,12 +21,12 @@ export interface Config {
 
 export const Config: Schema<Config> = Schema.intersect([
   Schema.object({
-    dataUrl: Schema.string().description('汉听词库 URL。').default('https://raw.githubusercontent.com/HanTingQuan/HTDictionary/refs/heads/main/hanting.csv'),
-    rubyStyle: Schema.union(rubyStyles).description('拼音格式。').default('plain'),
+    dataUrl: Schema.string().description('汉听词库 URL').default('https://raw.githubusercontent.com/HanTingQuan/HTDictionary/refs/heads/main/hanting.csv'),
+    rubyStyle: Schema.union(rubyStyles).description('拼音格式').default('plain'),
   }),
   Schema.object({
-    replaceMap: Schema.dict(Schema.string()).description('替换拼音中的字符。').collapse().default({ a: 'ɑ', ā: 'ɑ̄', á: 'ɑ́', ǎ: 'ɑ̌', à: 'ɑ̀', g: 'ɡ' }),
-    competitions: Schema.dict(Schema.string()).description('比赛来源文本。').collapse().default(competitions),
+    replaceMap: Schema.dict(Schema.string()).description('替换拼音中的字符').collapse().default({ a: 'ɑ', ā: 'ɑ̄', á: 'ɑ́', ǎ: 'ɑ̌', à: 'ɑ̀', g: 'ɡ' }),
+    competitions: Schema.dict(Schema.string()).description('比赛来源文本').collapse().default(competitions),
   }).description('高级配置'),
 ])
 
@@ -61,17 +61,17 @@ export async function apply(ctx: Context, config: Config) {
     example: 'string',
   }, { primary: ['id', 'variant'] })
 
-  ctx.command('hanting [id:string]', '从汉听词库中出题。')
+  ctx.command('hanting [id:string]', '从汉听词库中出题')
     .alias('汉听', '👂来一道汉听')
-    .option('flag', '-f <flag:number> 指定单词类型。')
+    .option('flag', '-f <flag:number> 指定单词类型')
     .alias('总', { options: { flag: 1 } })
     .alias('ziong', { options: { flag: 1 } })
     .alias('🥚', { options: { flag: 2 } })
-    .option('level', '-l <level:number> 指定单词等级。')
-    .option('competition', '-c <competition:string> 指定单词竞赛。')
-    .option('variant', '-v <variant:number> 指定单词变体。', { hidden: true })
-    .option('ruby', '-r <ruby:string> 指定拼音格式。', { hidden: true, type: rubyStyles })
-    .option('answer', '-a 显示答案。')
+    .option('level', '-l <level:number> 指定单词等级')
+    .option('competition', '-c <competition:string> 指定单词竞赛')
+    .option('variant', '-v <variant:number> 指定单词变体', { hidden: true })
+    .option('ruby', '-r <ruby:string> 指定拼音格式', { hidden: true, type: rubyStyles })
+    .option('answer', '-a 显示答案')
     .action(async ({ options, session }, id?: string) => {
       if (!session)
         return
