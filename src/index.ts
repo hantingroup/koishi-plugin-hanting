@@ -1,7 +1,6 @@
 import type { Context, Tables } from 'koishi'
 import type { VariantId } from './base26'
-import { } from '@koishijs/plugin-help'
-import { inlinecmd } from '@satorijs/adapter-qq'
+import {} from '@koishijs/plugin-help'
 import { $, h, Logger, Schema } from 'koishi'
 
 import { buildVariantId, parseVariantId } from './base26'
@@ -10,27 +9,28 @@ import { maskAnswer } from './pinyin'
 import { makeRubyPairs, rubyBuilders, rubyStyles } from './ruby'
 
 export const name = 'hanting'
+export const inject = ['database', 'pinyin-pro']
 const logger = new Logger(name)
 
 export interface Config {
   dataUrl: string
   rubyStyle: keyof typeof rubyBuilders
+  flagSymbols: string[]
   replaceMap: Record<string, string>
   competitions: Record<string, string>
 }
 
 export const Config: Schema<Config> = Schema.intersect([
   Schema.object({
-    dataUrl: Schema.string().description('汉听词库 URL。').default('https://raw.githubusercontent.com/HanTingQuan/HTDictionary/refs/heads/main/hanting.csv'),
+    dataUrl: Schema.string().role('link').description('汉听词库 URL。').default('https://raw.githubusercontent.com/HanTingQuan/HTDictionary/refs/heads/main/hanting.csv'),
     rubyStyle: Schema.union(rubyStyles).description('拼音格式。').default('plain'),
   }),
   Schema.object({
+    flagSymbols: Schema.tuple([Schema.string(), Schema.string(), Schema.string()]).description('单词类型符号。').default(['⭐', '🍄', '🥚']),
     replaceMap: Schema.dict(Schema.string()).description('替换拼音中的字符。').collapse().default({ a: 'ɑ', ā: 'ɑ̄', á: 'ɑ́', ǎ: 'ɑ̌', à: 'ɑ̀', g: 'ɡ' }),
-    competitions: Schema.dict(Schema.string()).description('比赛来源文本。').collapse().default(competitions),
+    competitions: Schema.dict(Schema.string()).description('比赛来源。').collapse().default(competitions),
   }).description('高级配置。'),
 ])
-
-export const inject = ['database']
 
 declare module 'koishi' {
   interface Tables {
@@ -64,9 +64,6 @@ export async function apply(ctx: Context, config: Config) {
   ctx.command('hanting [id:string]', '从汉听词库中出题')
     .alias('汉听', '👂来一道汉听')
     .option('flag', '-f <flag:number> 指定单词类型')
-    .alias('总', { options: { flag: 1 } })
-    .alias('ziong', { options: { flag: 1 } })
-    .alias('🥚', { options: { flag: 2 } })
     .option('level', '-l <level:number> 指定单词等级')
     .option('competition', '-c <competition:string> 指定单词竞赛')
     .option('variant', '-v <variant:number> 指定单词变体', { hidden: true })
@@ -84,7 +81,7 @@ export async function apply(ctx: Context, config: Config) {
         ...options?.variant ? { variant: options.variant } : {},
       }).orderBy($.random).limit(1).execute()
       if (!hanting)
-        return '未找到符合条件的单词！'
+        return await session.send('未找到符合条件的单词！')
 
       if (!options?.answer)
         maskAnswer(hanting)
@@ -96,7 +93,7 @@ export async function apply(ctx: Context, config: Config) {
       }
 
       let variantId = buildVariantId(hanting.id, hanting.variant)
-      const level = ['⭐', '🍄', '🥚'][hanting.flag].repeat(4 - hanting.level)
+      const level = config.flagSymbols[hanting.flag].repeat(4 - hanting.level)
 
       if (hanting.variant === 0) {
         const variant = await ctx.database.get('hanting', { id: hanting.id })
@@ -105,35 +102,33 @@ export async function apply(ctx: Context, config: Config) {
         }
       }
 
-      return h('qq:markdown', [
-        `${config.competitions[hanting.competition]}#${variantId}${level}`,
-        options?.answer
-          ? rubyBuilders[options?.ruby ?? config.rubyStyle](makeRubyPairs(hanting))
-          : hanting.pinyin.replaceAll('-', ''),
+      const ruby = options?.answer
+        ? rubyBuilders[options?.ruby ?? config.rubyStyle](makeRubyPairs(hanting))
+        : hanting.pinyin.replaceAll('-', '')
+
+      return h(
+        'markdown',
+        `${config.competitions[hanting.competition]}`,
+        h('inlinecmd', { text: `hanting.answer ${variantId}` }, `#${variantId}`),
+        level,
+        ruby,
         hanting.definition,
         hanting.example,
-        ...session.platform === 'qq' ? [
-          `> 回答汉听 👉 ${inlinecmd({ text: `/hanting.answer ${variantId} ` })}`,
-          !options?.answer && `> 查看答案 👉 ${inlinecmd({
-            enter: session.isDirect,
-            text: `/hanting ${variantId} -a`,
-          })}`,
-        ].filter(Boolean) : [],
-      ].map(frag => typeof frag === 'string' && !frag.endsWith('$$') ? `${frag}\n` : frag))
+      )
     })
-    .subcommand('.answer <id:string> <answer:string>', '回答')
+    .subcommand('.answer <id:string> <answer:string>', '回答汉听')
     .action(async ({ session }, id, answer) => {
       if (!session)
         return
 
       const [hanting] = await ctx.database.get('hanting', parseVariantId(id as VariantId))
       if (!hanting)
-        return '未找到符合条件的单词！'
+        return await session.send('未找到符合条件的单词！')
       const correctAnswer = hanting.word.split('/')
       if (!correctAnswer.includes(answer))
-        return '❌️回答错误！'
-      session.execute('hanting')
-      return '✅️回答正确！'
+        return await session.send('❌️回答错误！')
+      await session.send('✅️回答正确！')
+      await session.execute('hanting')
     })
 
   const stats = await ctx.database.stats()

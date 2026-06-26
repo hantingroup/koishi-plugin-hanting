@@ -6,14 +6,14 @@ export const rubyBuilders = {
   'TeX/overset': (pairs) => {
     const fragments = pairs.map(([chars, pinyins]) =>
       String.raw`\overset{\text{\scriptsize ${pinyins}}}{\text{${chars}}}`)
-    return `$$${fragments.join(String.raw`\;`)}$$`
+    return `$$${fragments.join(String.raw`\;`)}$$\n`
   },
 
   'TeX/array': (pairs) => {
     const colSpec = `*{${pairs.length}}{c}`
     const firstRow = pairs.map(([_, pinyins]) => `\\text{\\scriptsize ${pinyins}}`).join(' & ')
     const secondRow = pairs.map(([chars]) => `\\text{${chars}}`).join(' & ')
-    return `$$\\begin{array}{${colSpec}}${firstRow}\\\\${secondRow}\\end{array}$$`
+    return `$$\\begin{array}{${colSpec}}${firstRow}\\\\${secondRow}\\end{array}$$\n`
   },
 
   HTML(pairs) {
