@@ -1,23 +1,15 @@
 import type { Tables } from 'koishi'
-import { pinyin } from 'pinyin-pro'
 
 const pinyinSeparator = /[- ]/
 
-export function maskAnswer(hanting: Tables['hanting']): void {
-  const replaceMap = new Map()
-  const words = hanting.word.split('/')
-  let index = 0
-  for (const pinyin of hanting.pinyin.split(pinyinSeparator)) {
-    for (const word of words)
-      replaceMap.set(word[index], pinyin)
-    index++
-  }
+type Pinyin = (sentence: string) => { origin: string, pinyin: string }[]
 
+export function maskPinyin(hanting: Tables['hanting'], pinyin: Pinyin): void {
   const pinyinSet = new Set(hanting.pinyin.toLowerCase().split(pinyinSeparator))
   const maskText = (sentence: string) => {
-    return pinyin(sentence, { toneType: 'symbol', type: 'all' })
-      .map(item => hanting.word.includes(item.origin)
-        || pinyinSet.has(item.pinyin) ? ` ${item.pinyin} ` : item.origin)
+    return pinyin(sentence)
+      .map(({ origin, pinyin }) => hanting.word.includes(origin)
+        || pinyinSet.has(pinyin) ? ` ${pinyin} ` : origin)
       .join('')
       .replaceAll(/\s*(\p{P})\s*/gu, '$1')
       .replaceAll(/\s+/g, ' ')
