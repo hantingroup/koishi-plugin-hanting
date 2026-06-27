@@ -30,7 +30,7 @@ export const Config: Schema<Config> = Schema.intersect([
     flagSymbols: Schema.tuple([Schema.string(), Schema.string(), Schema.string()]).description('单词类型符号。').default(['⭐', '🍄', '🥚']),
     replaceMap: Schema.dict(Schema.string()).description('替换拼音中的字符。').collapse().default({ a: 'ɑ', ā: 'ɑ̄', á: 'ɑ́', ǎ: 'ɑ̌', à: 'ɑ̀', g: 'ɡ' }),
     competitions: Schema.dict(Schema.string()).description('比赛来源。').collapse().default(competitions),
-  }).description('高级配置'),
+  }).description('高级设置'),
 ])
 
 declare module 'koishi' {

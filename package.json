@@ -1,6 +1,6 @@
 {
   "name": "koishi-plugin-hanting",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "汉语听写插件",
   "typings": "lib/index.d.ts",
   "license": "MIT",
