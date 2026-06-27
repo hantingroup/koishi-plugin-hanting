@@ -4,7 +4,7 @@ const pinyinSeparator = /[- ]/
 
 type Pinyin = (sentence: string) => { origin: string, pinyin: string }[]
 
-export function maskPinyin(hanting: Tables['hanting'], pinyin: Pinyin): void {
+export function maskAnswer(hanting: Tables['hanting'], pinyin: Pinyin): void {
   const replaceMap = new Map()
   const words = hanting.word.split('/')
   let index = 0

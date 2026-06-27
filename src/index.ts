@@ -6,7 +6,7 @@ import {} from 'koishi-plugin-pinyin-pro'
 
 import { buildVariantId, parseVariantId } from './base26'
 import competitions from './competitions.json'
-import { maskPinyin } from './pinyin'
+import { maskAnswer } from './pinyin'
 import { makeRubyPairs, rubyBuilders, rubyStyles } from './ruby'
 
 export const name = 'hanting'
@@ -30,7 +30,7 @@ export const Config: Schema<Config> = Schema.intersect([
     flagSymbols: Schema.tuple([Schema.string(), Schema.string(), Schema.string()]).description('单词类型符号。').default(['⭐', '🍄', '🥚']),
     replaceMap: Schema.dict(Schema.string()).description('替换拼音中的字符。').collapse().default({ a: 'ɑ', ā: 'ɑ̄', á: 'ɑ́', ǎ: 'ɑ̌', à: 'ɑ̀', g: 'ɡ' }),
     competitions: Schema.dict(Schema.string()).description('比赛来源。').collapse().default(competitions),
-  }).description('高级配置。'),
+  }).description('高级配置'),
 ])
 
 declare module 'koishi' {
@@ -88,7 +88,7 @@ export async function apply(ctx: Context, config: Config) {
         return await session.send('未找到符合条件的单词！')
 
       if (!options?.answer)
-        maskPinyin(hanting, pinyin)
+        maskAnswer(hanting, pinyin)
 
       for (const [key, value] of Object.entries(config.replaceMap)) {
         hanting.pinyin = hanting.pinyin.replaceAll(key, value)
