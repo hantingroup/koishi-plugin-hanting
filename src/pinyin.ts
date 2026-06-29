@@ -1,10 +1,9 @@
 import type { Tables } from 'koishi'
+import type { Pinyin } from 'koishi-plugin-pinyin'
 
 const pinyinSeparator = /[- ]/
 
-type Pinyin = (sentence: string) => { origin: string, pinyin: string }[]
-
-export function maskAnswer(hanting: Tables['hanting'], pinyin: Pinyin): void {
+export async function maskAnswer(hanting: Tables['hanting'], asyncPinyin: Pinyin['asyncPinyin']): Promise<void> {
   const replaceMap = new Map()
   const words = hanting.word.split('/')
   let index = 0
@@ -15,17 +14,19 @@ export function maskAnswer(hanting: Tables['hanting'], pinyin: Pinyin): void {
   }
 
   const pinyinSet = new Set(hanting.pinyin.toLowerCase().split(pinyinSeparator))
-  const maskText = (sentence: string) => {
+  const maskText = async (sentence: string) => {
     for (const [origin, pinyin] of replaceMap)
-      sentence = sentence.replaceAll(origin, pinyin)
-    return pinyin(sentence)
-      .map(({ origin, pinyin }) => hanting.word.includes(origin)
-        || pinyinSet.has(pinyin) ? ` ${pinyin} ` : origin)
+      sentence = sentence.replaceAll(origin, ` ${pinyin} `)
+    return (await asyncPinyin(sentence, { style: 1 }) as string[])
+      .map((pinyin, index) => hanting.word.includes(sentence[index])
+        || pinyinSet.has(pinyin) ? ` ${pinyin} ` : sentence[index])
       .join('')
       .replaceAll(/\s*(\p{P})\s*/gu, '$1')
       .replaceAll(/\s+/g, ' ')
   }
 
-  hanting.definition = maskText(hanting.definition)
-  hanting.example && (hanting.example = maskText(hanting.example))
+  const promises = [maskText(hanting.definition).then(masked => hanting.definition = masked)]
+  if (hanting.example)
+    promises.push(maskText(hanting.example).then(masked => hanting.example = masked))
+  await Promise.all(promises)
 }

@@ -2,7 +2,7 @@ import type { Context, Tables } from 'koishi'
 import type { VariantId } from './base26'
 import {} from '@koishijs/plugin-help'
 import { $, h, Logger, Schema } from 'koishi'
-import {} from 'koishi-plugin-pinyin-pro'
+import {} from 'koishi-plugin-pinyin'
 
 import { buildVariantId, parseVariantId } from './base26'
 import competitions from './competitions.json'
@@ -10,7 +10,7 @@ import { maskAnswer } from './pinyin'
 import { makeRubyPairs, rubyBuilders, rubyStyles } from './ruby'
 
 export const name = 'hanting'
-export const inject = ['database', 'pinyin-pro']
+export const inject = ['database', 'pinyin']
 const logger = new Logger(name)
 
 export interface Config {
@@ -50,9 +50,6 @@ declare module 'koishi' {
 }
 
 export async function apply(ctx: Context, config: Config) {
-  const pinyin = (sentence: string) => ctx['pinyin-pro']
-    .pinyin(sentence, { toneType: 'symbol', type: 'all' })
-
   ctx.model.extend('hanting', {
     id: 'unsigned',
     variant: 'unsigned',
@@ -88,7 +85,7 @@ export async function apply(ctx: Context, config: Config) {
         return await session.send('未找到符合条件的单词！')
 
       if (!options?.answer)
-        maskAnswer(hanting, pinyin)
+        await maskAnswer(hanting, ctx.pinyin.asyncPinyin.bind(ctx.pinyin))
 
       for (const [key, value] of Object.entries(config.replaceMap)) {
         hanting.pinyin = hanting.pinyin.replaceAll(key, value)
@@ -115,9 +112,9 @@ export async function apply(ctx: Context, config: Config) {
         `${config.competitions[hanting.competition]}`,
         h('inlinecmd', { text: `hanting.answer ${variantId}` }, `#${variantId}`),
         level,
-        ruby,
-        hanting.definition,
-        hanting.example,
+        h('p', ruby),
+        h('p', hanting.definition),
+        h('p', hanting.example),
       )
     })
     .subcommand('.answer <id:string> <answer:string>', '回答汉听')
