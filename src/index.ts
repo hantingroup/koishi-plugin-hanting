@@ -63,7 +63,6 @@ export async function apply(ctx: Context, config: Config) {
   }, { primary: ['id', 'variant'] })
 
   ctx.command('hanting [id:string]', '从汉听词库中出题')
-    .alias('汉听', '👂来一道汉听')
     .option('flag', '-f <flag:number> 指定单词类型')
     .option('level', '-l <level:number> 指定单词等级')
     .option('competition', '-c <competition:string> 指定单词竞赛')
